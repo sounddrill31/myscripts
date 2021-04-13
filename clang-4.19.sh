@@ -144,10 +144,14 @@ gen_zip() {
 	cp "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
 	cp "$KERNEL_DIR"/out/drivers/staging/qcacld-3.0/*.ko AnyKernel3/modules/system/lib/modules
 	cd AnyKernel3 || exit
-	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" ./* -x .git README.md
+	zip -r9 rian_pekok.zip ./* -x .git README.md
 
 	## Prepare a final zip variable
 	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER.zip"
+	curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/raphielscape/scripts/master/zipsigner-3.0.jar
+
+	msg "|| Signing zip ||"
+	java -jar zipsigner-3.0.jar rian_pekok.zip "$ZIP_FINAL"
 	tg_post_build "$ZIP_FINAL" "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
 	cd ..
 	rm -rf AnyKernel3
