@@ -261,6 +261,7 @@ gen_zip() {
 	## Prepare a final zip variable
 	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER"
 
+	msg "|| Signing zip ||"
 	curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
 	java -jar zipsigner-3.0.jar "$ZIP_FINAL"-unsigned.zip "$ZIP_FINAL".zip
 
