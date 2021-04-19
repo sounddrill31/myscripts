@@ -128,9 +128,9 @@ DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 	msg "|| Cloning Clang ||"
 	git clone --depth=1 https://github.com/Reinazhard/aosp-clang.git clang-llvm --no-tags --single-branch
 	msg "|| Cloning ARM64 GCC ||"
-	git clone --depth=1 https://github.com/silont-project/aarch64-silont-linux-gnu.git -b arm64/11 gcc64 --no-tags --single-branch
+	git clone --depth=1 https://github.com/silont-project/aarch64-silont-linux-gnu.git -b arm64/10 gcc64 --no-tags --single-branch
 	msg "|| Cloning ARM GCC ||"
-	git clone --depth=1 https://github.com/silont-project/arm-silont-linux-gnueabi -b arm/11 gcc32 --no-tags --single-branch
+	git clone --depth=1 https://github.com/silont-project/arm-silont-linux-gnueabi -b arm/10 gcc32 --no-tags --single-branch
 		# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$KERNEL_DIR/clang-llvm
 	GCC64_DIR=$KERNEL_DIR/gcc64
