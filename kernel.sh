@@ -256,18 +256,13 @@ gen_zip() {
 		mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
 	fi
 	cd AnyKernel3 || exit
-	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER"-unsigned * -x .git README.md
+	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" * -x .git README.md
 
 	## Prepare a final zip variable
-	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER"
-
-	msg "|| Signing zip ||"
-	curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
-	java -jar zipsigner-3.0.jar "$ZIP_FINAL"-unsigned.zip "$ZIP_FINAL".zip
-
+	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER.zip"
 	if [ "$PTTG" = 1 ]
  	then
-		tg_post_build "$ZIP_FINAL".zip "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
+		tg_post_build "$ZIP_FINAL" "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
 	fi
 	cd ..
 }
