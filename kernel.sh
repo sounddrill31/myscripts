@@ -48,12 +48,9 @@ DEVICE="wayne"
 # your device or check source
 DEFCONFIG=wayne_defconfig
 
-# Specify compiler. 
+# Specify compiler.
 # 'clang' or 'gcc'
 COMPILER=gcc
-
-# Clean source prior building. 1 is NO(default) | 0 is YES
-INCREMENTAL=1
 
 # Push ZIP to Telegram. 1 is YES | 0 is NO(default)
 PTTG=1
@@ -63,56 +60,17 @@ PTTG=1
 		CHATID="-1001403511595"
 	fi
 
-# Generate a full DEFCONFIG prior building. 1 is YES | 0 is NO(default)
-DEF_REG=0
-
-# Build dtbo.img (select this only if your source has support to building dtbo.img)
-# 1 is YES | 0 is NO(default)
-BUILD_DTBO=0
-
-# Sign the zipfile
-# 1 is YES | 0 is NO
-SIGN=0
-
-# Silence the compilation
-# 1 is YES(default) | 0 is NO
-SILENCE=0
-
-# Debug purpose. Send logs on every successfull builds
-# 1 is YES | 0 is NO(default)
-LOG_DEBUG=0
-
 ##------------------------------------------------------##
 ##---------Do Not Touch Anything Beyond This------------##
 
-# Check if we are using a dedicated CI ( Continuous Integration ), and
-# set KBUILD_BUILD_VERSION and KBUILD_BUILD_HOST and CI_BRANCH
-
 ## Set defaults first
-DISTRO=$(cat /etc/issue)
-KBUILD_BUILD_HOST=Laptop-Sangar
 CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 token=$TELEGRAM_TOKEN
 export KBUILD_BUILD_HOST CI_BRANCH
 
-## Check for CI
-if [ -n "$CI" ]
-then
-	if [ -n "$CIRCLECI" ]
-	then
-		export KBUILD_BUILD_VERSION=$CIRCLE_BUILD_NUM
-		export KBUILD_BUILD_HOST="CircleCI"
-		export CI_BRANCH=$CIRCLE_BRANCH
-	fi
-	if [ -n "$DRONE" ]
-	then
-		export KBUILD_BUILD_VERSION=$DRONE_BUILD_NUMBER
-		export KBUILD_BUILD_HOST=Laptop-Sangar
-		export CI_BRANCH=$DRONE_BRANCH
-	else
-		echo "Not presetting Build Version"
-	fi
-fi
+## Export CI Env
+export KBUILD_BUILD_VERSION=$DRONE_BUILD_NUMBER
+export CI_BRANCH=$DRONE_BRANCH
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -139,12 +97,15 @@ COMMIT_HEAD=$(git log --oneline -1)
 
 exports() {
 	export KBUILD_BUILD_USER="reina"
+	export KBUILD_BUILD_HOST="Laptop-Sangar"
 	export ARCH=arm64
 	export SUBARCH=arm64
 
 	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)
 	PATH=$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH
 
+	export CROSS_COMPILE_ARM32=$GCC32_DIR/bin/arm-eabi-
+	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-elf-
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
@@ -173,64 +134,28 @@ tg_post_build() {
 	-F chat_id="$2"  \
 	-F "disable_web_page_preview=true" \
 	-F "parse_mode=html" \
-	-F caption="$3 | <code>Build Number : </code><b>$DRONE_BUILD_NUMBER</b>"  
+	-F caption="$3 | <code>Build Number : </code><b>$DRONE_BUILD_NUMBER</b>"
 }
 
 ##----------------------------------------------------------##
 
 build_kernel() {
-	if [ $INCREMENTAL = 0 ]
-	then
-		msg "|| Cleaning Sources ||"
-		make clean && make mrproper && rm -rf out
-	fi
-
-	make O=out $DEFCONFIG
-	if [ $DEF_REG = 1 ]
-	then
-		cp .config arch/arm64/configs/$DEFCONFIG
-		git add arch/arm64/configs/$DEFCONFIG
-		git commit -m "$DEFCONFIG: Regenerate
-
-						This is an auto-generated commit"
-	fi
-
-	BUILD_START=$(date +"%s")
-	
-	if [ $COMPILER = "clang" ]
-	then
-		MAKE+=(
-			CROSS_COMPILE=aarch64-linux-gnu- \
-			CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-			CC=clang \
-			AR=llvm-ar \
-			OBJDUMP=llvm-objdump \
-			STRIP=llvm-strip
-		)
-	fi
-	
-	if [ $SILENCE = "1" ]
-	then
-		MAKE+=( -s )
+	if [ "$PTTG" = 1 ]
+ 	then
+		tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>Top Commit : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
 	fi
 
 	msg "|| Started Compilation ||"
-	export CROSS_COMPILE_ARM32=$GCC32_DIR/bin/arm-eabi-
-	make -j"$PROCS" O=out CROSS_COMPILE=aarch64-elf- LD=ld.lld
+	BUILD_START=$(date +"%s")
+	make O=out $DEFCONFIG
+	make -j"$PROCS" O=out LD=ld.lld
 
 		BUILD_END=$(date +"%s")
 		DIFF=$((BUILD_END - BUILD_START))
 
-		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ] 
+		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
 	    then
 	    	msg "|| Kernel successfully compiled ||"
-	    	if [ $BUILD_DTBO = 1 ]
-			then
-				msg "|| Building DTBO ||"
-				tg_post_msg "<code>Building DTBO..</code>" "$CHATID"
-				python2 "$KERNEL_DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py" \
-					create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo"
-			fi
 				gen_zip
 		else
 			if [ "$PTTG" = 1 ]
@@ -238,7 +163,7 @@ build_kernel() {
 				tg_post_msg "<b>? Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>" "$CHATID"
 			fi
 		fi
-	
+
 }
 
 ##--------------------------------------------------------------##
@@ -265,10 +190,5 @@ gen_zip() {
 clone
 exports
 build_kernel
-
-if [ $LOG_DEBUG = "1" ]
-then
-	tg_post_build "error.log" "$CHATID" "Debug Mode Logs"
-fi
 
 ##----------------*****-----------------------------##
