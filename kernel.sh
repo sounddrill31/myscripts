@@ -46,7 +46,7 @@ DEVICE="santoni"
 
 # The defconfig which should be used. Get it from config.gz from
 # your device or check source
-DEFCONFIG=mi8937_defconfig
+DEFCONFIG=santoni_treble_defconfig
 
 # Specify compiler.
 # 'clang' or 'gcc'
