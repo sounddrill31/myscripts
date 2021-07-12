@@ -46,7 +46,7 @@ DEVICE="whyred"
 
 # The defconfig which should be used. Get it from config.gz from
 # your device or check source
-DEFCONFIG=whyred_defconfig
+DEFCONFIG=vendor/whyred_defconfig
 
 # Specify compiler.
 # 'clang' or 'gcc'
