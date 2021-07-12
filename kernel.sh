@@ -36,7 +36,7 @@ err() {
 KERNEL_DIR=$PWD
 
 # The name of the Kernel, to name the ZIP
-ZIPNAME="SiLonT-4.19"
+ZIPNAME="SiLonT-4nineteen"
 
 # The name of the device for which the kernel is built
 MODEL="Redmi Note 5 Pro"
@@ -47,10 +47,6 @@ DEVICE="whyred"
 # The defconfig which should be used. Get it from config.gz from
 # your device or check source
 DEFCONFIG=vendor/whyred_defconfig
-
-# Specify compiler.
-# 'clang' or 'gcc'
-COMPILER=gcc
 
 # Push ZIP to Telegram. 1 is YES | 0 is NO(default)
 PTTG=1
@@ -84,8 +80,8 @@ COMMIT_HEAD=$(git log --oneline -1)
  clone() {
 	echo " "
 		msg "|| Cloning GCC ||"
-		git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 -b gcc-new gcc64
-		git clone --depth=1 https://github.com/mvaisakh/gcc-arm -b gcc-new gcc32
+		git clone --depth=1 https://github.com/arter97/arm64-gcc gcc64
+		git clone --depth=1 https://github.com/arter97/arm32-gcc gcc32
 		GCC64_DIR=$KERNEL_DIR/gcc64
 		GCC32_DIR=$KERNEL_DIR/gcc32
 
@@ -109,7 +105,7 @@ exports() {
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
-	PROCS=$(nproc --all)
+	PROCS=$(($(nproc --all) + 2))
 	export PROCS
 }
 
@@ -170,11 +166,8 @@ build_kernel() {
 
 gen_zip() {
 	msg "|| Zipping into a flashable zip ||"
-	mv "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
-	if [ $BUILD_DTBO = 1 ]
-	then
-		mv "$KERNEL_DIR"/out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
-	fi
+	cp "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
+
 	cd AnyKernel3 || exit
 	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" * -x .git README.md
 
