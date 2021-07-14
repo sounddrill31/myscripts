@@ -64,7 +64,7 @@ DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 clone() {
 	echo " "
 	msg "|| Cloning Clang ||"
-	git clone --depth=1 https://github.com/pjorektneira/aosp-clang.git clang-llvm --no-tags --single-branch
+	git clone --depth=1 https://github.com/kdrag0n/proton-clang clang-llvm --no-tags --single-branch
 
 		# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$KERNEL_DIR/clang-llvm
@@ -82,10 +82,7 @@ exports() {
 
 	KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 	PATH=$TC_DIR/bin/:$PATH
-	export LD_LIBRARY_PATH=$TC_DIR/lib64:$LD_LIBRARY_PATH
 
- 	export CROSS_COMPILE=aarch64-linux-gnu-
- 	export CROSS_COMPILE_COMPAT=arm-none-eabi-
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
@@ -118,11 +115,11 @@ tg_post_build() {
 build_kernel() {
 
     tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>HEAD : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
-    make O=out $DEFCONFIG CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-none-eabi- LD=ld.lld
+    make O=out $DEFCONFIG CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- LD=ld.lld
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
-	make -j"$PROCS" O=out CC=clang AR=llvm-ar OBJDUMP=llvm-objdump STRIP=llvm-strip OBJCOPY=llvm-objcopy CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld
+	make -j"$PROCS" O=out CC=clang AR=llvm-ar OBJDUMP=llvm-objdump STRIP=llvm-strip OBJCOPY=llvm-objcopy LD=ld.lld CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 
