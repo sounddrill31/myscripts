@@ -38,23 +38,12 @@ KERNEL_DIR=$PWD
 # The name of the Kernel, to name the ZIP
 ZIPNAME="SiLonT-4nineteen"
 
-# The name of the device for which the kernel is built
-MODEL="Redmi Note 5 Pro"
-
 # The codename of the device
 DEVICE="whyred"
 
 # The defconfig which should be used. Get it from config.gz from
 # your device or check source
 DEFCONFIG=vendor/whyred_defconfig
-
-# Push ZIP to Telegram. 1 is YES | 0 is NO(default)
-PTTG=1
-	if [ $PTTG = 1 ]
-	then
-		# Set Telegram Chat ID
-		CHATID="-1001403511595"
-	fi
 
 ##------------------------------------------------------##
 ##---------Do Not Touch Anything Beyond This------------##
@@ -67,6 +56,7 @@ export KBUILD_BUILD_HOST CI_BRANCH
 ## Export CI Env
 export KBUILD_BUILD_VERSION=$DRONE_BUILD_NUMBER
 export CI_BRANCH=$DRONE_BRANCH
+export CHATID="-1001403511595"
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -122,9 +112,6 @@ tg_post_msg() {
 ##----------------------------------------------------------------##
 
 tg_post_build() {
-	#Post MD5Checksum alongwith for easeness
-	MD5CHECK=$(md5sum "$1" | cut -d' ' -f1)
-
 	#Show the Checksum alongwith caption
 	curl --progress-bar -F document=@"$1" "$BOT_BUILD_URL" \
 	-F chat_id="$2"  \
@@ -136,29 +123,23 @@ tg_post_build() {
 ##----------------------------------------------------------##
 
 build_kernel() {
-	if [ "$PTTG" = 1 ]
- 	then
-		tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>Top Commit : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
-	fi
+
+	tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>Top Commit : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
 	make O=out $DEFCONFIG
 	make -j"$PROCS" O=out
+	BUILD_END=$(date +"%s")
+	DIFF=$((BUILD_END - BUILD_START))
 
-		BUILD_END=$(date +"%s")
-		DIFF=$((BUILD_END - BUILD_START))
-
-		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
+	if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
 	    then
 	    	msg "|| Kernel successfully compiled ||"
-				gen_zip
-		else
-			if [ "$PTTG" = 1 ]
- 			then
-				tg_post_msg "<b>❌ Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>" "$CHATID"
-			fi
-		fi
+		gen_zip
+	else
+		tg_post_msg "<b>❌ Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>" "$CHATID"
+	fi
 
 }
 
@@ -169,14 +150,11 @@ gen_zip() {
 	cp "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
 
 	cd AnyKernel3 || exit
-	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" * -x .git README.md
+	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" ./* -x .git README.md
 
 	## Prepare a final zip variable
 	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER.zip"
-	if [ "$PTTG" = 1 ]
- 	then
-		tg_post_build "$ZIP_FINAL" "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
-	fi
+	tg_post_build "$ZIP_FINAL" "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
 	cd ..
 }
 
