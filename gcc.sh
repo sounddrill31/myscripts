@@ -102,7 +102,7 @@ exports() {
 ##---------------------------------------------------------##
 
 tg_post_msg() {
-	curl -s -X POST "$BOT_MSG_URL" -d chat_id="-1001403511595" \
+	curl -s -X POST "$BOT_MSG_URL" -d chat_id="$CHATID" \
 	-d "disable_web_page_preview=true" \
 	-d "parse_mode=html" \
 	-d text="$1"
@@ -131,16 +131,16 @@ build_kernel() {
 	make O=out $DEFCONFIG
 	make -j"$PROCS" O=out LD=ld.lld
 
-		BUILD_END=$(date +"%s")
-		DIFF=$((BUILD_END - BUILD_START))
+	BUILD_END=$(date +"%s")
+	DIFF=$((BUILD_END - BUILD_START))
 
-		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
+	if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
 	    then
 	    	msg "|| Kernel successfully compiled ||"
-				gen_zip
-		else
+		gen_zip
+	else
 		tg_post_msg "<b>❌ Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>" "$CHATID"
-		fi
+	fi
 
 }
 
