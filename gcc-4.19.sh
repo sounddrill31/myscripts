@@ -70,8 +70,8 @@ COMMIT_HEAD=$(git log --oneline -1)
  clone() {
 	echo " "
 		msg "|| Cloning GCC ||"
-		git clone --depth=1 https://github.com/silont-project/aarch64-elf-gcc -b arm64/11 gcc64
-		git clone --depth=1 https://github.com/silont-project/arm-eabi-gcc -b arm/11 gcc32
+		git clone --depth=1 --single-branch https://github.com/pjorektneira/arm64-gcc.git -b arm gcc64
+		git clone --depth=1 --single-branch https://github.com/pjorektneira/arm32-gcc.git -b arm gcc32
 		GCC64_DIR=$KERNEL_DIR/gcc64
 		GCC32_DIR=$KERNEL_DIR/gcc32
 
@@ -90,8 +90,8 @@ exports() {
 	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)
 	PATH=$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH
 
-	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-eabi-
-	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-elf-
+	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-none-eabi-
+	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-none-elf-
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
