@@ -37,8 +37,8 @@ KERNEL_DIR=$PWD
 
 # Devices variable
 ZIPNAME="SiLonT-4nineteen"
-DEVICE="whyred"
-DEFCONFIG=vendor/whyred_defconfig
+DEVICE="tulip"
+DEFCONFIG=vendor/tulip_defconfig
 
 # EnvSetup
 KBUILD_BUILD_USER="reina"
@@ -66,7 +66,7 @@ clone() {
 	TC_DIR=$KERNEL_DIR/clang-llvm
 
 	msg "|| Cloning Anykernel ||"
-	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b master
+	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b tulip
 }
 
 ##------------------------------------------------------##
@@ -113,7 +113,6 @@ tg_post_build() {
 
 build_kernel() {
 
- 	tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>HEAD : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
  	make O=out $DEFCONFIG CC=clang
 
 	msg "|| Started Compilation ||"
