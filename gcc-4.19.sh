@@ -68,13 +68,6 @@ COMMIT_HEAD=$(git log --oneline -1)
 #Now Its time for other stuffs like cloning, exporting, etc
 
  clone() {
-	echo " "
-		msg "|| Cloning GCC ||"
-		git clone --depth=1 --single-branch https://github.com/pjorektneira/arm64-gcc.git -b arm gcc64
-		git clone --depth=1 --single-branch https://github.com/pjorektneira/arm32-gcc.git -b arm gcc32
-		GCC64_DIR=$KERNEL_DIR/gcc64
-		GCC32_DIR=$KERNEL_DIR/gcc32
-
 	msg "|| Cloning Anykernel ||"
 	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b master
 }
@@ -87,12 +80,11 @@ exports() {
 	export ARCH=arm64
 	export SUBARCH=arm64
 
-	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64*-elf-gcc --version | head -n 1)
-	PATH=$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH
+	KBUILD_COMPILER_STRING=$(aarch64-linux-gnu-gcc --version | head -n 1)
 
-	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-none-eabi-
-	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-none-elf-
-	export PATH KBUILD_COMPILER_STRING
+	export CROSS_COMPILE_COMPAT=arm-none-eabi-
+	export CROSS_COMPILE=aarch64-linux-gnu-
+	export KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
 	PROCS=$(($(nproc --all) + 2))
