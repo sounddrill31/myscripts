@@ -43,7 +43,8 @@ DEVICE="tulip"
 
 # The defconfig which should be used. Get it from config.gz from
 # your device or check source
-DEFCONFIG=vendor/tulip_defconfig
+DEFCONFIG=vendor/bouquet_defconfig
+FG_DEFCON=vendor/tulip.config
 
 ##------------------------------------------------------##
 ##---------Do Not Touch Anything Beyond This------------##
@@ -70,8 +71,11 @@ COMMIT_HEAD=$(git log --oneline -1)
  clone() {
 	echo " "
 		msg "|| Cloning GCC ||"
-		git clone --depth=1 --single-branch https://github.com/mvaisakh/gcc-arm64 gcc64
+		git clone --depth=1 --single-branch https://github.com/silont-project/aarch64-elf-gcc -b arm64/11 gcc64
+		git clone --depth=1 --single-branch https://github.com/silont-project/arm-eabi-gcc -b arm/11 gcc32
+
 		GCC64_DIR=$KERNEL_DIR/gcc64
+		GCC32_DIR=$KERNEL_DIR/gcc32
 
 	msg "|| Cloning Anykernel ||"
 	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b tulip
@@ -88,7 +92,7 @@ exports() {
 	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64*-elf-gcc --version | head -n 1)
 	PATH=$GCC64_DIR/bin/:/usr/bin:$PATH
 
-	export CROSS_COMPILE_COMPAT=arm-none-eabi-
+	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-eabi-
 	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-elf-
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
@@ -124,7 +128,7 @@ build_kernel() {
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
-	make O=out $DEFCONFIG LD=ld.lld
+	make O=out $DEFCONFIG $FG_DEFCON LD=ld.lld
 	make -j"$PROCS" O=out LD=ld.lld
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
