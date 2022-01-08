@@ -124,8 +124,8 @@ build_kernel() {
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
-	make O=out $DEFCONFIG
-	make -j"$PROCS" O=out
+	make O=out $DEFCONFIG LD=ld.lld
+	make -j"$PROCS" O=out LD=ld.lld
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 
