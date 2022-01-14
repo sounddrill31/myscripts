@@ -60,7 +60,7 @@ COMMIT_HEAD=$(git log --oneline -1)
 clone() {
 	echo " "
 	msg "|| Cloning Clang ||"
-	git clone --depth=1 https://github.com/pjorektneira/aosp-clang.git clang-llvm --no-tags --single-branch
+	git clone --depth=1 https://gitlab.com/KudProject/prebuilts/clang/host/linux-x86.git -b r437112 clang-llvm --no-tags --single-branch
 
 	# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$KERNEL_DIR/clang-llvm
