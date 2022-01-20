@@ -70,7 +70,7 @@ COMMIT_HEAD=$(git log --oneline -1)
  clone() {
 	echo " "
 		msg "|| Cloning GCC ||"
-		git clone --depth=1 --single-branch https://github.com/mvaisakh/gcc-arm64.git gcc64
+		git clone --depth=1 --single-branch https://github.com/arter97/arm64-gcc gcc64
 		GCC64_DIR=$KERNEL_DIR/gcc64
 
 	msg "|| Cloning Anykernel ||"
