@@ -60,10 +60,14 @@ COMMIT_HEAD=$(git log --oneline -1)
 clone() {
 	echo " "
 	msg "|| Cloning Clang ||"
-	git clone --depth=1 https://gitlab.com/KudProject/prebuilts/clang/host/linux-x86.git -b r437112 clang-llvm --no-tags --single-branch
+	git clone --depth=1 https://github.com/pjorektneira/aosp-clang -b google clang-llvm --no-tags --single-branch
+
+	msg "|| Cloning Binutils ||"
+	git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gas/linux-x86/ -b master gcc --single-branch --no-tags
 
 	# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$KERNEL_DIR/clang-llvm
+	GCC_DIR=$KERNEL_DIR/gcc
 
 	msg "|| Cloning Anykernel ||"
 	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b master
@@ -78,8 +82,8 @@ exports() {
 
 	KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 	PATH=$TC_DIR/bin/:$PATH
-	export CROSS_COMPILE="aarch64-linux-gnu-"
-	export CROSS_COMPILE_COMPAT="arm-none-eabi-"
+	export CROSS_COMPILE=$GCC_DIR/gcc/aarch64-linux-gnu-
+	export CROSS_COMPILE_COMPAT=$GCC_DIR/gcc/arm-linux-gnueabi-
 	export LD_LIBRARY_PATH=$TC_DIR/lib64:$LD_LIBRARY_PATH
 
 	export PATH KBUILD_COMPILER_STRING
@@ -114,11 +118,11 @@ tg_post_build() {
 build_kernel() {
 
  	tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>HEAD : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
- 	make O=out $DEFCONFIG CC=clang
+	make O=out $DEFCONFIG LLVM=1 LLVM_IAS=1
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
-	make -j"$PROCS" O=out CC=clang CLANG_TRIPLE=aarch64-linux-gnu-
+	make -j"$PROCS" O=out LLVM=1 LLVM_IAS=1
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 
