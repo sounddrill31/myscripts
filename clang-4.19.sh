@@ -38,7 +38,8 @@ KERNEL_DIR=$PWD
 # Devices variable
 ZIPNAME="SiLonT-4nineteen"
 DEVICE="whyred"
-DEFCONFIG=vendor/whyred_defconfig
+DEFCONFIG=vendor/bouquet_defconfig
+FG_DEFCON=vendor/whyred.config
 
 # EnvSetup
 KBUILD_BUILD_USER="reina"
@@ -118,7 +119,7 @@ tg_post_build() {
 build_kernel() {
 
  	tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>HEAD : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
-	make O=out $DEFCONFIG LLVM=1 LLVM_IAS=1
+	make O=out $DEFCONFIG $FG_DEFCON LLVM=1 LLVM_IAS=1
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")

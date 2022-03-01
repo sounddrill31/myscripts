@@ -38,7 +38,8 @@ KERNEL_DIR=$PWD
 # Devices variable
 ZIPNAME="SiLonT-4nineteen"
 DEVICE="tulip"
-DEFCONFIG=vendor/tulip_defconfig
+DEFCONFIG=vendor/bouquet_defconfig
+FG_DEFCON=vendor/tulip.config
 
 # EnvSetup
 KBUILD_BUILD_USER="reina"
@@ -117,7 +118,7 @@ tg_post_build() {
 
 build_kernel() {
 
-	make O=out $DEFCONFIG LLVM=1 LLVM_IAS=1
+	make O=out $DEFCONFIG $FG_DEFCON LLVM=1 LLVM_IAS=1
 
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
