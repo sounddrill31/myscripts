@@ -90,7 +90,7 @@ exports() {
 	export PATH KBUILD_COMPILER_STRING
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
-	PROCS=$(($(nproc --all) + 2))
+	PROCS=$(nproc --all)
 	export PROCS
 }
 
