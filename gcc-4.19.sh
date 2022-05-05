@@ -80,8 +80,8 @@ exports() {
 
 	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64*-elf-gcc --version | head -n 1)
 	PATH=$GCC64_DIR/bin/:/usr/bin:$PATH
-	export CROSS_COMPILE=$GCC64_DIR/gcc/aarch64-elf-
-	export CROSS_COMPILE_COMPAT=$GCC32_DIR/gcc/arm-eabi-
+	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-elf-
+	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-eabi-
 	export PATH KBUILD_COMPILER_STRING
 
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
