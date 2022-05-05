@@ -61,8 +61,8 @@ COMMIT_HEAD=$(git log --oneline -1)
 clone() {
 	echo " "
 	msg "|| Cloning GCC ||"
-	git clone https://github.com/mvaisakh/gcc-arm64 gcc64 -b master --depth=1 --single-branch --no-tags
-	git clone https://github.com/mvaisakh/gcc-arm gcc32 -b master --depth=1 --single-branch --no-tags
+	git clone https://github.com/mvaisakh/gcc-arm64 gcc64 -b gcc-master --depth=1 --single-branch --no-tags
+	git clone https://github.com/mvaisakh/gcc-arm gcc32 -b gcc-master --depth=1 --single-branch --no-tags
 
 	GCC64_DIR=$KERNEL_DIR/gcc64
 	GCC32_DIR=$KERNEL_DIR/gcc32
