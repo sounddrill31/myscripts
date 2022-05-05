@@ -35,47 +35,37 @@ err() {
 # The defult directory where the kernel should be placed
 KERNEL_DIR=$PWD
 
-# The name of the Kernel, to name the ZIP
+# Devices variable
 ZIPNAME="SiLonT-4nineteen"
-
-# The codename of the device
 DEVICE="tulip"
-
-# The defconfig which should be used. Get it from config.gz from
-# your device or check source
 DEFCONFIG=vendor/bouquet_defconfig
 FG_DEFCON=vendor/tulip.config
 
-##------------------------------------------------------##
-##---------Do Not Touch Anything Beyond This------------##
+# EnvSetup
+KBUILD_BUILD_USER="reina"
+KBUILD_BUILD_HOST=Laptop-Sangar
+export CHATID="-1001403511595"
+export KBUILD_BUILD_HOST KBUILD_BUILD_USER
 
-## Set defaults first
-CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-token=$TELEGRAM_TOKEN
-export KBUILD_BUILD_HOST CI_BRANCH
-
-## Export CI Env
 export KBUILD_BUILD_VERSION=$DRONE_BUILD_NUMBER
 export CI_BRANCH=$DRONE_BRANCH
-export CHATID="-1001403511595"
 
-#Check Kernel Version
+# Check Kernel Version
 KERVER=$(make kernelversion)
-
 
 # Set a commit head
 COMMIT_HEAD=$(git log --oneline -1)
 
-#Now Its time for other stuffs like cloning, exporting, etc
+##-----------------------------------------------------##
 
- clone() {
+clone() {
 	echo " "
-		msg "|| Cloning GCC ||"
-		git clone --depth=1 --single-branch https://github.com/silont-project/aarch64-elf-gcc -b arm64/11 gcc64
-		git clone --depth=1 --single-branch https://github.com/silont-project/arm-eabi-gcc -b arm/11 gcc32
+	msg "|| Cloning GCC ||"
+	git clone https://github.com/mvaisakh/gcc-arm64 gcc64 -b master --depth=1 --single-branch --no-tags
+	git clone https://github.com/mvaisakh/gcc-arm gcc32 -b master --depth=1 --single-branch --no-tags
 
-		GCC64_DIR=$KERNEL_DIR/gcc64
-		GCC32_DIR=$KERNEL_DIR/gcc32
+	GCC64_DIR=$KERNEL_DIR/gcc64
+	GCC32_DIR=$KERNEL_DIR/gcc32
 
 	msg "|| Cloning Anykernel ||"
 	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b tulip
@@ -84,17 +74,16 @@ COMMIT_HEAD=$(git log --oneline -1)
 ##------------------------------------------------------##
 
 exports() {
-	export KBUILD_BUILD_USER="reina"
-	export KBUILD_BUILD_HOST="Laptop-Sangar"
 	export ARCH=arm64
 	export SUBARCH=arm64
+	export token=$TELEGRAM_TOKEN
 
 	KBUILD_COMPILER_STRING=$("$GCC64_DIR"/bin/aarch64*-elf-gcc --version | head -n 1)
 	PATH=$GCC64_DIR/bin/:/usr/bin:$PATH
-
-	export CROSS_COMPILE_COMPAT=$GCC32_DIR/bin/arm-eabi-
-	export CROSS_COMPILE=$GCC64_DIR/bin/aarch64-elf-
+	export CROSS_COMPILE=$GCC64_DIR/gcc/aarch64-elf-
+	export CROSS_COMPILE_COMPAT=$GCC32_DIR/gcc/arm-eabi-
 	export PATH KBUILD_COMPILER_STRING
+
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
 	PROCS=$(($(nproc --all) + 2))
@@ -104,7 +93,7 @@ exports() {
 ##---------------------------------------------------------##
 
 tg_post_msg() {
-	curl -s -X POST "$BOT_MSG_URL" -d chat_id="$CHATID" \
+	curl -s -X POST "$BOT_MSG_URL" -d chat_id="$2" \
 	-d "disable_web_page_preview=true" \
 	-d "parse_mode=html" \
 	-d text="$1"
@@ -114,7 +103,6 @@ tg_post_msg() {
 ##----------------------------------------------------------------##
 
 tg_post_build() {
-	#Show the Checksum alongwith caption
 	curl --progress-bar -F document=@"$1" "$BOT_BUILD_URL" \
 	-F chat_id="$2"  \
 	-F "disable_web_page_preview=true" \
@@ -126,20 +114,22 @@ tg_post_build() {
 
 build_kernel() {
 
+ 	tg_post_msg "<b>🔨 $KBUILD_BUILD_VERSION CI Build Triggered</b>%0A<b>Kernel Version : </b><code>$KERVER</code>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CI_BRANCH</code>%0A<b>HEAD : </b><a href='$DRONE_COMMIT_LINK'>$COMMIT_HEAD</a>" "$CHATID"
+	make O=out $DEFCONFIG $FG_DEFCON LD=ld.lld
+
 	msg "|| Started Compilation ||"
 	BUILD_START=$(date +"%s")
-	make O=out $DEFCONFIG $FG_DEFCON LD=ld.lld
 	make -j"$PROCS" O=out LD=ld.lld
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 
-	if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
+		if [ -f "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb ]
 	    then
 	    	msg "|| Kernel successfully compiled ||"
-		gen_zip
-	else
+			gen_zip
+		else
 		tg_post_msg "<b>❌ Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>" "$CHATID"
-	fi
+		fi
 
 }
 
@@ -148,14 +138,19 @@ build_kernel() {
 gen_zip() {
 	msg "|| Zipping into a flashable zip ||"
 	cp "$KERNEL_DIR"/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/Image.gz-dtb
-
+	cp "$KERNEL_DIR"/out/drivers/staging/qcacld-3.0/*.ko AnyKernel3/modules/system/lib/modules
 	cd AnyKernel3 || exit
-	zip -r9 $ZIPNAME-$DEVICE-"$DRONE_BUILD_NUMBER" ./* -x .git README.md
+	zip -r9 rian_pekok.zip ./* -x .git README.md
 
 	## Prepare a final zip variable
 	ZIP_FINAL="$ZIPNAME-$DEVICE-$DRONE_BUILD_NUMBER.zip"
+	curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/raphielscape/scripts/master/zipsigner-3.0.jar
+
+	msg "|| Signing zip ||"
+	java -jar zipsigner-3.0.jar rian_pekok.zip "$ZIP_FINAL"
 	tg_post_build "$ZIP_FINAL" "$CHATID" "✅ Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
 	cd ..
+	rm -rf AnyKernel3
 }
 
 clone
