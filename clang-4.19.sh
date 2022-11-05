@@ -61,10 +61,10 @@ COMMIT_HEAD=$(git log --oneline -1)
 clone() {
 	echo " "
 	msg "|| Cloning Clang ||"
-	git clone https://gitlab.com/reinazhard/aosp-clang.git clang-llvm --depth=1 --no-tags --single-branch
+	git clone https://gitlab.com/ThankYouMario/android_prebuilts_clang-standalone -b 15 clang-llvm --depth=1 --no-tags --single-branch
 
 	msg "|| Cloning Binutils ||"
-	git clone https://android.googlesource.com/platform/prebuilts/gas/linux-x86/ -b master gcc --depth=1 --single-branch --no-tags
+	git clone https://github.com/KudProject/prebuilts_gas_linux-x86.git gcc --depth=1 --single-branch --no-tags
 
 	# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$KERNEL_DIR/clang-llvm
