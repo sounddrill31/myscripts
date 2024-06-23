@@ -70,12 +70,24 @@ COMMIT_HEAD=$(git log --oneline -1)
  clone() {
 	echo " "
 		msg "|| Cloning GCC ||"
+		if [ -d "$KERNEL_DIR/gcc64" ]; then
+  			echo "gcc64 folder found! Removing..."
+  			rm -rf "$KERNEL_DIR/gcc64" || true; 
+     		fi
+  		if [ -d "$KERNEL_DIR/gcc32" ]; then
+    			echo "gcc32 folder found! Removing..."
+			rm -rf "$KERNEL_DIR/gcc32" || true; 
+   		fi
 		git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 -b gcc-new gcc64
 		git clone --depth=1 https://github.com/mvaisakh/gcc-arm -b gcc-new gcc32
 		GCC64_DIR=$KERNEL_DIR/gcc64
 		GCC32_DIR=$KERNEL_DIR/gcc32
 
 	msg "|| Cloning Anykernel ||"
+  	if [ -d "$KERNEL_DIR/AnyKernel3" ]; then
+    		echo "AnyKernel3 folder found! Removing..."
+		rm -rf "$KERNEL_DIR/AnyKernel3" || true; 
+   	fi
 	git clone --depth 1 --no-single-branch https://github.com/Reinazhard/AnyKernel3.git -b sadtoni
 }
 
